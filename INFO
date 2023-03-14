@@ -1,0 +1,13 @@
+❯  cat /proc/net/dev
+Inter-|   Receive                                                |  Transmit
+ face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
+    lo:  359517     985    0    0    0     0          0         0   359517     985    0    0    0     0       0          0
+enp2s0:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0
+wlp3s0: 190750938  141881    0    0    0     0          0         0 13587262   91013    0    0    0     0       0          0
+
+
+
+Interface | status |       Quality    |         Discarded packets          | Missed | WE GROUPS
+                   | link level noise |  nwid crypt frag retry misc beacon |    %   |
+wlan0     | 0000   | 59.  -53.  -256        0      0      0      0      0        0      0
+
