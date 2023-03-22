@@ -1,112 +1,60 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-
-#define MAX_INTERFACES 10
-#define MAX_LINE_LENGTH 200
-
-struct interface_stats {
-    char name[20];
-    int status;
-    int link_quality;
-    int signal_level;
-    int noise_level;
-    int discarded_packets;
-    int nwid;
-    int crypt;
-    int frag;
-    int retry;
-    int missed_beacons;
-};
+#include <iostream>
+#include <cstring>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 int main() {
-    
-    FILE *fp;
-    char line[MAX_LINE_LENGTH];
-    char *token;
-    int i = 0;
-    struct interface_stats interfaces[MAX_INTERFACES];
-
-    fp = fopen("/proc/net/wireless", "r");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open file: %s\n", strerror(errno));
-        exit(EXIT_FAILURE);
+    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd < 0) {
+        std::cerr << "Error creating socket" << std::endl;
+        return 1;
     }
 
-    // Skip the first two lines of the file
-    fgets(line, MAX_LINE_LENGTH, fp);
-    fgets(line, MAX_LINE_LENGTH, fp);
+    struct ifreq ifr;
+    std::memset(&ifr, 0, sizeof(ifr));
+    std::strcpy(ifr.ifr_name, "wlp3s0");
 
-    // Parse each line of the file
-    while (fgets(line, MAX_LINE_LENGTH, fp) != NULL && i < MAX_INTERFACES) {
-        token = strtok(line, " :\t\n");
+    if (ioctl(sockfd, SIOCGIFHWADDR, &ifr) < 0) {
+        std::cerr << "Error sending ioctl request" << std::endl;
+        return 1;
+    }
 
-        // Parse interface name
-        strcpy(interfaces[i].name, token);
-
-        // Parse status
-        token = strtok(NULL, " :\t\n");
-        if (strcmp(token, "up") == 0) {
-            interfaces[i].status = 1;
-        } else {
-            interfaces[i].status = 0;
+    std::cout << "Interface: " << ifr.ifr_name << std::endl;
+    std::cout << "MAC Address: ";
+    for (int i = 0; i < 6; i++) {
+        std::cout << std::hex << (int)(unsigned char)ifr.ifr_hwaddr.sa_data[i];
+        if (i < 5) {
+            std::cout << ":";
         }
+    }
+    std::cout << std::endl;
 
-        // Parse link quality
-        token = strtok(NULL, " :\t\n");
-        interfaces[i].link_quality = atoi(token);
-
-        // Parse signal level
-        token = strtok(NULL, " :\t\n");
-        interfaces[i].signal_level = atoi(token);
-
-        // Parse noise level
-        token = strtok(NULL, " :\t\n");
-        interfaces[i].noise_level = atoi(token);
-
-        // Skip discarded packets
-        token = strtok(NULL, " :\t\n");
-
-        // Parse NWID
-        token = strtok(NULL, " :\t\n");
-        interfaces[i].nwid = atoi(token);
-
-        // Parse Crypt
-        token = strtok(NULL, " :\t\n");
-        interfaces[i].crypt = atoi(token);
-
-        // Parse Frag
-        token = strtok(NULL, " :\t\n");
-        interfaces[i].frag = atoi(token);
-
-        // Parse Retry
-        token = strtok(NULL, " :\t\n");
-        interfaces[i].retry = atoi(token);
-
-        // Parse Missed Beacons
-        token = strtok(NULL, " :\t\n");
-        interfaces[i].missed_beacons = atoi(token);
-
-        i++;
+    // Get IP address
+    if (ioctl(sockfd, SIOCGIFADDR, &ifr) < 0) {
+        std::cerr << "Error sending ioctl request" << std::endl;
+        return 1;
     }
 
-    fclose(fp);
+    std::cout << "IP Address: " << inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr) << std::endl;
 
-    // Print the parsed interface data
-    for (int j = 0; j < i; j++) {
-        printf("Interface: %s\n", interfaces[j].name);
-        printf("Status: %d\n", interfaces[j].status);
-        printf("Link quality: %d\n", interfaces[j].link_quality);
-        printf("Signal level: %d\n", interfaces[j].signal_level);
-        printf("Noise level: %d\n", interfaces[j].noise_level);
-        printf("Discarded packets: %d\n", interfaces[j].discarded_packets);
-        printf("NWID: %d\n", interfaces[j].nwid);
-        printf("Crypt: %d\n", interfaces[j].crypt);
-        printf("Frag: %d\n", interfaces[j].frag);
-        printf("Retry: %d\n", interfaces[j].retry);
-        printf("Missed packet%d\n",interfaces[j].missed_beacons);
+    // Get netmask
+    if (ioctl(sockfd, SIOCGIFNETMASK, &ifr) < 0) {
+        std::cerr << "Error sending ioctl request" << std::endl;
+        return 1;
     }
+
+    std::cout << "Netmask: " << inet_ntoa(((struct sockaddr_in *)&ifr.ifr_netmask)->sin_addr) << std::endl;
+
+    // Get broadcast address
+    if (ioctl(sockfd, SIOCGIFBRDADDR, &ifr) < 0) {
+        std::cerr << "Error sending ioctl request" << std::endl;
+        return 1;
+    }
+
+    std::cout << "Broadcast Address: " << inet_ntoa(((struct sockaddr_in *)&ifr.ifr_broadaddr)->sin_addr) << std::endl;
 
     return 0;
 }

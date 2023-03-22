@@ -137,31 +137,29 @@ pub fn mai() -> Vec<NetworkDevice> {
 #[derive(Debug)]
 pub struct WirelessInterface {
     pub interface: String,
-    pub status: f64,
-    pub q_link: f64,
-    pub level: f64,
-    pub noise: f64
+    pub link: f64,
+    // pub level: f64,
+    // pub noise: f64
 }
 
 pub fn parse_wireless_interfaces() -> Vec<WirelessInterface> {
-
+    
     let contents = std::fs::read_to_string("/proc/net/wireless").expect("Error reading file");
     let mut interfaces = vec![];
 
     for line in contents.lines().skip(2) {
         let mut parts = line.split_whitespace();
         let interface = parts.next().unwrap().trim_matches(':').to_string();
-        let status = parts.next().unwrap().trim_matches('"').parse::<f64>().unwrap();
-        let q_link = parts.next().unwrap().parse::<f64>().unwrap();
-        let level = parts.next().unwrap().parse::<f64>().unwrap();
-        let noise = parts.next().unwrap().parse::<f64>().unwrap();
+        parts.next();
+        let link = parts.next().unwrap().parse::<f64>().unwrap();
+        // let level = parts.next().unwrap().parse::<f64>().unwrap();
+        // let noise = parts.next().unwrap().parse::<f64>().unwrap();
 
         interfaces.push(WirelessInterface {
             interface,
-            status,
-            q_link,
-            level,
-            noise
+            link,
+            // level,
+            // noise
         });
     }
 

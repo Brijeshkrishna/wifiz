@@ -1,29 +1,35 @@
-// use nix::sys::socket::{socket,SockType};
-// use nix::ioctl_read;
+// // use nix::sys::socket::{socket,SockType};
+// // use nix::ioctl_read;
+
+// use libc::ioctl;
+
+// mod dev;
+// use std::io;
+// use libc;
+
+// fn main()  {
 
 
-mod dev;
 
+//     // // Create a UDP socket
+//     // let socket_fd = socket(
+//     //     nix::sys::socket::AddressFamily::Inet,
+//     //     SockType::Datagram,
+//     //     nix::sys::socket::SockFlag::empty(),
+//     //     None,
+//     // )
+//     // .expect("Failed to create socket");
 
-fn main() {
+// }
 
-
-    loop{
-        let  a = dev::parse_wireless_interfaces();
-
-        print!("{}\r",a[0].q_link);
-
+#[link(name = "a")]
+extern "C" {
+        fn wifi();
     }
-
-
     
-    // // Create a UDP socket
-    // let socket_fd = socket(
-    //     nix::sys::socket::AddressFamily::Inet, 
-    //     SockType::Datagram, 
-    //     nix::sys::socket::SockFlag::empty(), 
-    //     None, 
-    // )
-    // .expect("Failed to create socket");
+    fn main() {
+        let result = unsafe { wifi() };
+    }
+    
 
-}
+
